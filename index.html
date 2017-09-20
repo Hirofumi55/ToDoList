@@ -5,11 +5,20 @@
     <meta charset="UTF-8">
     <title>Todo List</title>
 
+    <style>
+        #todo-list {
+            font-size: 20;
+        }
+
+    </style>
+
 </head>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/foundation/6.2.4/foundation.min.css">
 
 <script src="https://cdn.jsdelivr.net/foundation/6.2.4/foundation.min.js"></script>
+
+
 
 <body>
     <h1>TODO List</h1>
@@ -25,13 +34,8 @@
 
         <div class="row">
             <ul id="todo-list">
-
             </ul>
-
         </div>
-
-
-
     </main>
 
 
@@ -39,12 +43,20 @@
         (function() {
             'use strict'
 
-            //IDから関連付け
+            var todos = localStorage.getItem('todos')
+
+            if (todos) {
+                todos = JSON.parse(todos)
+            } else {
+                todos = []
+            }
+
             var todoForm = document.getElementById('todo-form')
             var todoList = document.getElementById('todo-list')
 
             //下記のようにCSS風にセレクターで取得することもできる
             var todoInput = document.querySelector('#todo-form input')
+
 
             //アイテム追加メソッド
             var addItem = function(event) {
@@ -56,35 +68,76 @@
                     return
                 }
 
-                //チェックボックス要素を生成 <input type="checkbox">
-                var checkBox = document.createElement('input')
-                checkBox.type = 'checkbox'
+                //pushで配列に値を追加できる
+                todos.push({
+                    text: todoInput.value,
+                    done: false
+                })
 
-                //スパン要素を作成
-                var span = document.createElement(span)
-                span.textContent = todoInput.value
-
-                var label = document.createElement('label')
-                label.appendChild(checkBox)
-                label.appendChild(span)
-
-
-                //Deleteボタンの作成
-                var deleteButton = document.createElement('button')
-                deleteButton.textContent = 'Delete'
-                deleteButton.className = 'button alert'
-                deleteButton.addEventListener('click', deleteItem)
-
-
-                //リストアイテムにそれぞれ追加
-                var listItem = document.createElement('li')
-                listItem.appendChild(label)
-                listItem.appendChild(deleteButton)
-
-                todoList.appendChild(listItem)
+                //描写（更新）
+                render()
 
                 //ボックスを空にする
                 todoInput.value = ""
+
+            }
+
+
+            //HTMLを描写するメソッド
+            var render = function() {
+
+                //todoListの初期化
+                todoList.innerHTML = ''
+
+
+                //for文で回していく
+                todos.forEach(function(todo) {
+
+                    //チェックボックス要素を生成 <input type="checkbox">
+                    var checkBox = document.createElement('input')
+                    checkBox.type = 'checkbox'
+                    checkBox.checked = todo.done
+                    checkBox.addEventListener('change', function(event) {
+                        todo.done = event.target.checked
+                    })
+
+
+                    //スパン要素を作成
+                    var span = document.createElement(span)
+                    span.textContent = todo.text
+
+                    var label = document.createElement('label')
+                    label.appendChild(checkBox)
+                    label.appendChild(span)
+                    label.style.fontSize = 10
+                    //label.className = 'label secondary'
+
+
+                    //Deleteボタンの作成
+                    var deleteButton = document.createElement('button')
+                    deleteButton.textContent = 'Delete'
+                    deleteButton.className = 'button alert'
+                    deleteButton.addEventListener('click', function() {
+
+                        var index = todos.indexOf(todo)
+                        //indexから一個分削除
+                        todos.splice(index, 1)
+                        render()
+                    })
+
+                    //リストアイテムにそれぞれ追加
+                    var listItem = document.createElement('li')
+                    listItem.appendChild(label)
+                    listItem.appendChild(deleteButton)
+
+                    todoList.appendChild(listItem)
+
+                    //localStrageに保存する
+                    localStorage.setItem('todos', JSON.stringify(todos))
+
+                })
+
+
             }
 
             var deleteItem = function(event) {
@@ -93,13 +146,15 @@
                 //parentElementで親要素がわかる
                 var listItem = event.target.parentElement
                 todoList.removeChild(listItem)
-
             }
 
             //submitボタン押下でaddItemが発火される
             todoForm.addEventListener('submit', addItem)
 
+            render()
+
         }());
+
     </script>
 
 </body>
